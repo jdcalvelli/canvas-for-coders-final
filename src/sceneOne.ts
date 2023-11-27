@@ -23,9 +23,19 @@ const lightGroup: THREE.Group = new THREE.Group();
   camera.position.set(200, 100, 100);
   camera.lookAt(0, 0, 0);
 
+  // audio related, figure out how to handle this more robustly later
+  const audio1 = new Audio(
+    "src/_assets/_audio/Haywyre - Let Me Hear That (320 kbps).mp3"
+  );
+
+  // signal callback? where should this go
+  window.addEventListener("click", () => {
+    audio1.play();
+  });
+
   // kick this all into a component
   const loader = new GLTFLoader();
-  loader.load("src/_models/Icosahedron.glb", function (gltf) {
+  loader.load("src/_assets/_models/Icosahedron.glb", function (gltf) {
     let gltfScene = gltf.scene;
     gltfScene.scale.set(4, 4, 4);
     // changing color of only child
