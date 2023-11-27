@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { Howl, Howler } from "howler";
 import "./style.css";
 // global imports
 import { createCamera } from "./_globals/camera";
@@ -24,14 +25,10 @@ const lightGroup: THREE.Group = new THREE.Group();
   camera.lookAt(0, 0, 0);
 
   // audio related, figure out how to handle this more robustly later
-  const audio1 = new Audio(
-    "src/_assets/_audio/Haywyre - Let Me Hear That (320 kbps).mp3"
-  );
-
-  // signal callback? where should this go
-  window.addEventListener("click", () => {
-    audio1.play();
+  let track = new Howl({
+    src: ["src/_assets/_audio/Haywyre - Let Me Hear That (320 kbps).mp3"],
   });
+  track.play();
 
   // kick this all into a component
   const loader = new GLTFLoader();

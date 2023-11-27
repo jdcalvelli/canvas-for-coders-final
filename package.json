@@ -13,7 +13,9 @@
     "vite": "^4.4.5"
   },
   "dependencies": {
+    "@types/howler": "^2.2.11",
     "@types/three": "^0.158.2",
+    "howler": "^2.2.4",
     "three": "^0.158.0"
   }
 }
