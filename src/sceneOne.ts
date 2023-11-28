@@ -42,6 +42,7 @@ let audioAnalyzer: THREE.AudioAnalyser;
   audioAnalyzer = new THREE.AudioAnalyser(sound, 64);
 
   // adding icosahedron from file ASYNC
+  // attribution: Icosahedron 1,0 by Ina Yosun Chang [CC-BY] via Poly Pizza
   createGLTFObject(
     "icosahedron",
     meshGroup,
