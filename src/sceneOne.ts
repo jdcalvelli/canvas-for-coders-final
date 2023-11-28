@@ -5,9 +5,9 @@ import "./style.css";
 import { createCamera } from "./_globals/camera";
 import { createRenderer } from "./_globals/renderer";
 // component imports
-import { plane } from "./_meshes/plane";
 import { sl1 } from "./_lights/sl1";
 import { sl2 } from "./_lights/sl2";
+import { plane } from "./_meshes/plane";
 
 // properties globals
 const renderer: THREE.WebGLRenderer = createRenderer();
@@ -26,7 +26,7 @@ let audioAnalyzer: THREE.AudioAnalyser;
   camera.position.set(200, 100, 100);
   camera.lookAt(0, 0, 0);
 
-  // three audio
+  // three audio - kick this out into some other kind of thing (audio singleton?)
   const listener = new THREE.AudioListener();
   camera.add(listener);
   const sound = new THREE.Audio(listener);
@@ -45,7 +45,6 @@ let audioAnalyzer: THREE.AudioAnalyser;
   const loader = new GLTFLoader();
   loader.load("src/_assets/_models/Icosahedron.glb", function (gltf) {
     let gltfScene = gltf.scene;
-    gltfScene.scale.set(4, 4, 4);
     // changing color of only child
     gltfScene.children[0].material.color = 0x000000;
 
@@ -88,7 +87,12 @@ let audioAnalyzer: THREE.AudioAnalyser;
   meshGroup.children[1].rotation.z = -Math.sin(timeStamp / 1000);
 
   // showing that the audio analyzer is working
-  console.log(audioAnalyzer.getFrequencyData());
+  let freqData: Uint8Array = audioAnalyzer.getFrequencyData();
+  console.log(freqData);
+  // change scales based on fft
+  meshGroup.children[1].scale.x = Math.max(3, (8 * freqData[22]) / 255);
+  meshGroup.children[1].scale.y = Math.max(3, (8 * freqData[22]) / 255);
+  meshGroup.children[1].scale.z = Math.max(3, (8 * freqData[22]) / 255);
 
   renderer.render(scene, camera);
 })();
