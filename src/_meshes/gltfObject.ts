@@ -5,7 +5,7 @@ export function createGLTFObject(
   name: string,
   parentGroup: THREE.Group,
   path: string
-): void {
+) {
   const loader = new GLTFLoader();
 
   loader.load(path, function (gltf) {

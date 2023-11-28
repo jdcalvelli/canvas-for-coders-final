@@ -20,7 +20,7 @@ const lightGroup: THREE.Group = new THREE.Group();
 // audioAnalyzer needs to be global to scene so it can be referenced in update
 let audioAnalyzer: THREE.AudioAnalyser;
 
-(function start(): void {
+(function start() {
   // camera manipulation
   camera.position.set(200, 100, 100);
   camera.lookAt(0, 0, 0);
@@ -66,15 +66,13 @@ let audioAnalyzer: THREE.AudioAnalyser;
   scene.add(lightGroup);
 })();
 
-(function update(time): void {
-  // why is this erroring lmao
+(function update(time) {
   requestAnimationFrame(update);
 
   // change icosahedron color
   // needs to be here bc of load time from file (until we can figure out a loading situation)
-  // not sure why this is erroring either
-  let icoMesh: THREE.Mesh =
-    meshGroup.getObjectByName("icosahedron")!.children[0];
+  let icoMesh = meshGroup.getObjectByName("icosahedron")!
+    .children[0] as THREE.Mesh;
   icoMesh.material = new THREE.MeshStandardMaterial({ color: 0xffffff });
 
   // math sin does the oscillation back and forth once every second!

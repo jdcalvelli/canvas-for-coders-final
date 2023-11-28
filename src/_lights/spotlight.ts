@@ -5,7 +5,7 @@ export function createSpotlight(
   color: number,
   intensity: number,
   parentGroup: THREE.Group
-): void {
+) {
   // create spotlight with sensible defaults
   const spotLight = new THREE.SpotLight(color, intensity);
   spotLight.lookAt(0, 0, 0);

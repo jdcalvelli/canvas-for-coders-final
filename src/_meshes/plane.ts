@@ -1,6 +1,6 @@
 import * as THREE from "three";
 
-export function createPlane(name: string, parentGroup: THREE.Group): void {
+export function createPlane(name: string, parentGroup: THREE.Group) {
   // create geometry
   const planeGeom = new THREE.PlaneGeometry(1, 1, 1);
   // create mat
