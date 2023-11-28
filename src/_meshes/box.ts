@@ -1,6 +1,6 @@
 import * as THREE from "three";
 
-export function box(): THREE.Mesh {
+export function createBox(): THREE.Mesh {
   // create geometry
   const boxGeom = new THREE.BoxGeometry(1, 1, 1);
   // create mat

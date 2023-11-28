@@ -1,5 +1,4 @@
 import * as THREE from "three";
-import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import "./style.css";
 // global imports
 import { createCamera } from "./_globals/camera";
@@ -7,7 +6,8 @@ import { createRenderer } from "./_globals/renderer";
 // component imports
 import { sl1 } from "./_lights/sl1";
 import { sl2 } from "./_lights/sl2";
-import { plane } from "./_meshes/plane";
+import { createPlane } from "./_meshes/plane";
+import { createGLTFObject } from "./_meshes/gltfObject";
 
 // properties globals
 const renderer: THREE.WebGLRenderer = createRenderer();
@@ -15,7 +15,7 @@ const camera: THREE.PerspectiveCamera = createCamera();
 // scene locals
 const scene: THREE.Scene = new THREE.Scene();
 
-// redo these into dicts, not groups so that they're more easily accessible
+// redo these into objects, not groups so that they're more easily accessible
 const meshGroup: THREE.Group = new THREE.Group();
 const lightGroup: THREE.Group = new THREE.Group();
 
@@ -27,13 +27,14 @@ let audioAnalyzer: THREE.AudioAnalyser;
   camera.lookAt(0, 0, 0);
 
   // three audio - kick this out into some other kind of thing (audio singleton?)
-  const listener = new THREE.AudioListener();
+  // should also write a little helper for audio visuals that can just go in the top right (regular old bar chart situation)
+  const listener: THREE.AudioListener = new THREE.AudioListener();
   camera.add(listener);
-  const sound = new THREE.Audio(listener);
-  const audioLoader = new THREE.AudioLoader();
+  const sound: THREE.Audio = new THREE.Audio(listener);
+  const audioLoader: THREE.AudioLoader = new THREE.AudioLoader();
   audioLoader.load(
     "src/_assets/_audio/Haywyre - Let Me Hear That (320 kbps).mp3",
-    function (buffer) {
+    function (buffer: AudioBuffer) {
       sound.setBuffer(buffer);
       sound.setVolume(0.5);
       sound.play();
@@ -41,18 +42,12 @@ let audioAnalyzer: THREE.AudioAnalyser;
   );
   audioAnalyzer = new THREE.AudioAnalyser(sound, 64);
 
-  // kick this all into a component
-  const loader = new GLTFLoader();
-  loader.load("src/_assets/_models/Icosahedron.glb", function (gltf) {
-    let gltfScene = gltf.scene;
-    // changing color of only child
-    gltfScene.children[0].material.color = 0x000000;
-
-    meshGroup.add(gltfScene);
-  });
+  // adding gltfobject
+  // has to be a different setup bc of the way that loading objects works
+  createGLTFObject("src/_assets/_models/Icosahedron.glb", meshGroup);
 
   // adding plane underneath
-  const p1: THREE.Mesh = plane();
+  const p1: THREE.Mesh = createPlane();
   p1.scale.set(100, 100, 100);
   p1.rotation.x = -Math.PI * 0.5;
   p1.position.y = -50;
