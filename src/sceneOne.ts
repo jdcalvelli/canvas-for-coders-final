@@ -11,17 +11,17 @@ import { createGLTFObject } from "./_meshes/gltfObject";
 // properties globals
 const renderer: THREE.WebGLRenderer = createRenderer();
 const camera: THREE.PerspectiveCamera = createCamera();
+
 // scene locals
 const scene: THREE.Scene = new THREE.Scene();
-
-// redo these into objects, not groups so that they're more easily accessible
+// parent groups for referencing in update
 const meshGroup: THREE.Group = new THREE.Group();
 const lightGroup: THREE.Group = new THREE.Group();
-
-// AUDIO ANALYZER INFO
+// audioAnalyzer needs to be global to scene so it can be referenced in update
 let audioAnalyzer: THREE.AudioAnalyser;
 
-(function init(): void {
+(function start(): void {
+  // camera manipulation
   camera.position.set(200, 100, 100);
   camera.lookAt(0, 0, 0);
 
@@ -41,7 +41,7 @@ let audioAnalyzer: THREE.AudioAnalyser;
   );
   audioAnalyzer = new THREE.AudioAnalyser(sound, 64);
 
-  // adding gltfobject
+  // adding icosahedron from file ASYNC
   createGLTFObject(
     "icosahedron",
     meshGroup,
@@ -55,9 +55,9 @@ let audioAnalyzer: THREE.AudioAnalyser;
   meshGroup.getObjectByName("ground")!.rotation.x = -Math.PI * 0.5;
   meshGroup.getObjectByName("ground")!.position.y = -50;
 
+  // creating lights
   createSpotlight("l1", 0xffffff, 10, lightGroup);
   lightGroup.getObjectByName("l1")!.position.set(0, 100, 100);
-
   createSpotlight("l2", 0xffffff, 10, lightGroup);
   lightGroup.getObjectByName("l2")!.position.set(0, 100, -100);
 
@@ -66,24 +66,27 @@ let audioAnalyzer: THREE.AudioAnalyser;
   scene.add(lightGroup);
 })();
 
-(function update(timeStamp): void {
+(function update(time): void {
   // why is this erroring lmao
   requestAnimationFrame(update);
 
-  // gotta find a better way to be able to reference objects
+  // change icosahedron color
+  // needs to be here bc of load time from file (until we can figure out a loading situation)
+  // not sure why this is erroring either
+  let icoMesh: THREE.Mesh =
+    meshGroup.getObjectByName("icosahedron")!.children[0];
+  icoMesh.material = new THREE.MeshStandardMaterial({ color: 0xffffff });
+
   // math sin does the oscillation back and forth once every second!
   // this should change to on beat situation
-  meshGroup.getObjectByName("icosahedron")!.rotation.y = Math.sin(
-    timeStamp / 1000
-  );
+  meshGroup.getObjectByName("icosahedron")!.rotation.y = Math.sin(time! / 1000);
   meshGroup.getObjectByName("icosahedron")!.rotation.z = -Math.sin(
-    timeStamp / 1000
+    time! / 1000
   );
 
-  // showing that the audio analyzer is working
+  // save freqdata into more accessible array
   let freqData: Uint8Array = audioAnalyzer.getFrequencyData();
-  console.log(freqData);
-  // change scales based on fft
+  // change icosahedron scales based on fft
   meshGroup.getObjectByName("icosahedron")!.scale.x = Math.max(
     3,
     (8 * freqData[22]) / 255
@@ -97,5 +100,6 @@ let audioAnalyzer: THREE.AudioAnalyser;
     (8 * freqData[22]) / 255
   );
 
+  // required render for threejs
   renderer.render(scene, camera);
 })();
