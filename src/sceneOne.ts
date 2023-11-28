@@ -1,6 +1,5 @@
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
-import { Howl, Howler } from "howler";
 import "./style.css";
 // global imports
 import { createCamera } from "./_globals/camera";
