@@ -18,6 +18,7 @@ const scene: THREE.Scene = new THREE.Scene();
 const meshGroup: THREE.Group = new THREE.Group();
 const lightGroup: THREE.Group = new THREE.Group();
 // audioAnalyzer needs to be global to scene so it can be referenced in update
+let sound: THREE.Audio;
 let audioAnalyzer: THREE.AudioAnalyser;
 
 (function start() {
@@ -29,7 +30,7 @@ let audioAnalyzer: THREE.AudioAnalyser;
   // should also write a little helper for audio visuals that can just go in the top right (regular old bar chart situation)
   const listener: THREE.AudioListener = new THREE.AudioListener();
   camera.add(listener);
-  const sound: THREE.Audio = new THREE.Audio(listener);
+  sound = new THREE.Audio(listener);
   const audioLoader: THREE.AudioLoader = new THREE.AudioLoader();
   audioLoader.load(
     "src/_assets/_audio/Haywyre - Let Me Hear That (320 kbps).mp3",
@@ -43,24 +44,35 @@ let audioAnalyzer: THREE.AudioAnalyser;
 
   // adding icosahedron from file ASYNC
   // attribution: Icosahedron 1,0 by Ina Yosun Chang [CC-BY] via Poly Pizza
+  // REWRITE OTHER COMPONENTS TO TAKE CALLBACKS W A PASSTHROUGH VAR FOR THE OBJECT?
   createGLTFObject(
     "icosahedron",
     meshGroup,
-    "src/_assets/_models/Icosahedron.glb"
+    "src/_assets/_models/Icosahedron.glb",
+    () => {
+      meshGroup.getObjectByName("icosahedron")!.children[0].material =
+        new THREE.MeshLambertMaterial({ color: 0xcecece });
+      meshGroup.getObjectByName("icosahedron")!.castShadow = true;
+      meshGroup.getObjectByName("icosahedron")!.receiveShadow = true;
+    }
   );
 
   // adding plane underneath
   createPlane("ground", meshGroup);
   //errors out bc it could not exist, but we know it does, so using ! (non null assertion operator)
-  meshGroup.getObjectByName("ground")!.scale.set(100, 100, 100);
+  meshGroup.getObjectByName("ground")!.scale.set(1000, 1000, 1000);
   meshGroup.getObjectByName("ground")!.rotation.x = -Math.PI * 0.5;
   meshGroup.getObjectByName("ground")!.position.y = -50;
+  meshGroup.getObjectByName("ground")!.castShadow = true;
+  meshGroup.getObjectByName("ground")!.receiveShadow = true;
 
   // creating lights
-  createSpotlight("l1", 0xffffff, 10, lightGroup);
+  createSpotlight("l1", 0xffffff, 100, lightGroup);
   lightGroup.getObjectByName("l1")!.position.set(0, 100, 100);
-  createSpotlight("l2", 0xffffff, 10, lightGroup);
-  lightGroup.getObjectByName("l2")!.position.set(0, 100, -100);
+  let spotlightHelper: THREE.SpotLightHelper = new THREE.SpotLightHelper(
+    lightGroup.getObjectByName("l1") as THREE.Light
+  );
+  scene.add(spotlightHelper);
 
   // adding parent groups to scene
   scene.add(meshGroup);
@@ -70,34 +82,52 @@ let audioAnalyzer: THREE.AudioAnalyser;
 (function update(time) {
   requestAnimationFrame(update);
 
-  // change icosahedron color
-  // needs to be here bc of load time from file (until we can figure out a loading situation)
-  let icoMesh = meshGroup.getObjectByName("icosahedron")!
-    .children[0] as THREE.Mesh;
-  icoMesh.material = new THREE.MeshStandardMaterial({ color: 0xffffff });
-
-  // math sin does the oscillation back and forth once every second!
-  // this should change to on beat situation
-  meshGroup.getObjectByName("icosahedron")!.rotation.y = Math.sin(time! / 1000);
-  meshGroup.getObjectByName("icosahedron")!.rotation.z = -Math.sin(
-    time! / 1000
-  );
+  // math sin does the oscillation back and forth
+  // song bpm is 110 (beat duration = 60 / bpm)
+  // using sound context time instead of update frame time
+  if (sound.isPlaying) {
+    meshGroup.getObjectByName("icosahedron")!.rotation.y =
+      2 * Math.sin((sound.context.currentTime * 1000) / 545.5);
+    meshGroup.getObjectByName("icosahedron")!.rotation.z =
+      2 * -Math.sin((sound.context.currentTime * 1000) / 545.5);
+  }
 
   // save freqdata into more accessible array
   let freqData: Uint8Array = audioAnalyzer.getFrequencyData();
   // change icosahedron scales based on fft
   meshGroup.getObjectByName("icosahedron")!.scale.x = Math.max(
     3,
-    (8 * freqData[22]) / 255
+    (7 * freqData[22]) / 255
   );
   meshGroup.getObjectByName("icosahedron")!.scale.y = Math.max(
     3,
-    (8 * freqData[22]) / 255
+    (7 * freqData[22]) / 255
   );
   meshGroup.getObjectByName("icosahedron")!.scale.z = Math.max(
     3,
-    (8 * freqData[22]) / 255
+    (7 * freqData[22]) / 255
   );
+
+  // change icosahedron color
+  let icoMesh = meshGroup.getObjectByName("icosahedron")!
+    .children[0] as THREE.Mesh;
+  // but this does exist lmao
+  icoMesh.material.color.setRGB(
+    freqData[1] / 255,
+    freqData[11] / 255,
+    freqData[22] / 255
+  );
+
+  // change spotlight intensity based on freqData
+  lightGroup.getObjectByName("l1")!.intensity = Math.max(200, freqData[22]);
+  if (freqData[22] >= 125) {
+    console.log("OVER");
+    lightGroup
+      .getObjectByName("l1")!
+      .color.setRGB(0.75, 0.2, freqData[22] / 255);
+  } else {
+    lightGroup.getObjectByName("l1")!.color.setRGB(1, 1, 1);
+  }
 
   // required render for threejs
   renderer.render(scene, camera);
