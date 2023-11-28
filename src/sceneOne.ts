@@ -4,8 +4,7 @@ import "./style.css";
 import { createCamera } from "./_globals/camera";
 import { createRenderer } from "./_globals/renderer";
 // component imports
-import { sl1 } from "./_lights/sl1";
-import { sl2 } from "./_lights/sl2";
+import { createSpotlight } from "./_lights/spotlight";
 import { createPlane } from "./_meshes/plane";
 import { createGLTFObject } from "./_meshes/gltfObject";
 
@@ -43,31 +42,26 @@ let audioAnalyzer: THREE.AudioAnalyser;
   audioAnalyzer = new THREE.AudioAnalyser(sound, 64);
 
   // adding gltfobject
-  // has to be a different setup bc of the way that loading objects works
-  createGLTFObject("src/_assets/_models/Icosahedron.glb", meshGroup);
+  createGLTFObject(
+    "icosahedron",
+    meshGroup,
+    "src/_assets/_models/Icosahedron.glb"
+  );
 
   // adding plane underneath
-  const p1: THREE.Mesh = createPlane();
-  p1.scale.set(100, 100, 100);
-  p1.rotation.x = -Math.PI * 0.5;
-  p1.position.y = -50;
-  meshGroup.add(p1);
+  createPlane("ground", meshGroup);
+  //errors out bc it could not exist, but we know it does, so using ! (non null assertion operator)
+  meshGroup.getObjectByName("ground")!.scale.set(100, 100, 100);
+  meshGroup.getObjectByName("ground")!.rotation.x = -Math.PI * 0.5;
+  meshGroup.getObjectByName("ground")!.position.y = -50;
 
-  // adding ambient light
-  // const al1: THREE.AmbientLight = new THREE.AmbientLight(0xffffff, 1);
-  // lightGroup.add(al1);
+  createSpotlight("l1", 0xffffff, 10, lightGroup);
+  lightGroup.getObjectByName("l1")!.position.set(0, 100, 100);
 
-  const l1: THREE.SpotLight = sl1();
-  lightGroup.add(l1);
-  // const slHelper: THREE.SpotLightHelper = new THREE.SpotLightHelper(l1);
-  // scene.add(slHelper);
+  createSpotlight("l2", 0xffffff, 10, lightGroup);
+  lightGroup.getObjectByName("l2")!.position.set(0, 100, -100);
 
-  const l2: THREE.SpotLight = sl2();
-  lightGroup.add(l2);
-  // const sl2Helper: THREE.SpotLightHelper = new THREE.SpotLightHelper(l2);
-  // scene.add(sl2Helper);
-
-  // adding to scene
+  // adding parent groups to scene
   scene.add(meshGroup);
   scene.add(lightGroup);
 })();
@@ -78,16 +72,30 @@ let audioAnalyzer: THREE.AudioAnalyser;
 
   // gotta find a better way to be able to reference objects
   // math sin does the oscillation back and forth once every second!
-  meshGroup.children[1].rotation.y = Math.sin(timeStamp / 1000);
-  meshGroup.children[1].rotation.z = -Math.sin(timeStamp / 1000);
+  // this should change to on beat situation
+  meshGroup.getObjectByName("icosahedron")!.rotation.y = Math.sin(
+    timeStamp / 1000
+  );
+  meshGroup.getObjectByName("icosahedron")!.rotation.z = -Math.sin(
+    timeStamp / 1000
+  );
 
   // showing that the audio analyzer is working
   let freqData: Uint8Array = audioAnalyzer.getFrequencyData();
   console.log(freqData);
   // change scales based on fft
-  meshGroup.children[1].scale.x = Math.max(3, (8 * freqData[22]) / 255);
-  meshGroup.children[1].scale.y = Math.max(3, (8 * freqData[22]) / 255);
-  meshGroup.children[1].scale.z = Math.max(3, (8 * freqData[22]) / 255);
+  meshGroup.getObjectByName("icosahedron")!.scale.x = Math.max(
+    3,
+    (8 * freqData[22]) / 255
+  );
+  meshGroup.getObjectByName("icosahedron")!.scale.y = Math.max(
+    3,
+    (8 * freqData[22]) / 255
+  );
+  meshGroup.getObjectByName("icosahedron")!.scale.z = Math.max(
+    3,
+    (8 * freqData[22]) / 255
+  );
 
   renderer.render(scene, camera);
 })();
