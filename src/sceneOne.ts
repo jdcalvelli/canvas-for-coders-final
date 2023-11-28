@@ -20,15 +20,27 @@ const scene: THREE.Scene = new THREE.Scene();
 const meshGroup: THREE.Group = new THREE.Group();
 const lightGroup: THREE.Group = new THREE.Group();
 
+// AUDIO ANALYZER INFO
+let audioAnalyzer: THREE.AudioAnalyser;
+
 (function init(): void {
   camera.position.set(200, 100, 100);
   camera.lookAt(0, 0, 0);
 
-  // audio related, figure out how to handle this more robustly later
-  let track = new Howl({
-    src: ["src/_assets/_audio/Haywyre - Let Me Hear That (320 kbps).mp3"],
-  });
-  track.play();
+  // three audio
+  const listener = new THREE.AudioListener();
+  camera.add(listener);
+  const sound = new THREE.Audio(listener);
+  const audioLoader = new THREE.AudioLoader();
+  audioLoader.load(
+    "src/_assets/_audio/Haywyre - Let Me Hear That (320 kbps).mp3",
+    function (buffer) {
+      sound.setBuffer(buffer);
+      sound.setVolume(0.5);
+      sound.play();
+    }
+  );
+  audioAnalyzer = new THREE.AudioAnalyser(sound, 64);
 
   // kick this all into a component
   const loader = new GLTFLoader();
@@ -71,12 +83,13 @@ const lightGroup: THREE.Group = new THREE.Group();
   // why is this erroring lmao
   requestAnimationFrame(update);
 
-  console.log(timeStamp);
-
   // gotta find a better way to be able to reference objects
   // math sin does the oscillation back and forth once every second!
   meshGroup.children[1].rotation.y = Math.sin(timeStamp / 1000);
   meshGroup.children[1].rotation.z = -Math.sin(timeStamp / 1000);
+
+  // showing that the audio analyzer is working
+  console.log(audioAnalyzer.getFrequencyData());
 
   renderer.render(scene, camera);
 })();
