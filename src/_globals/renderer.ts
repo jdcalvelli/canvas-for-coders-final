@@ -6,6 +6,10 @@ export function createRenderer(): THREE.WebGLRenderer {
     antialias: true,
   });
 
+  // enable shadows
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
   // init renderer
   renderer.setPixelRatio(window.devicePixelRatio);
   renderer.setSize(window.innerWidth, window.innerHeight);

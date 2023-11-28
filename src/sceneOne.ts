@@ -5,8 +5,8 @@ import { createCamera } from "./_globals/camera";
 import { createRenderer } from "./_globals/renderer";
 // component imports
 import { createSpotlight } from "./_lights/spotlight";
-import { createPlane } from "./_meshes/plane";
 import { createGLTFObject } from "./_meshes/gltfObject";
+import { createPlane } from "./_meshes/plane";
 
 // properties globals
 const renderer: THREE.WebGLRenderer = createRenderer();
@@ -22,6 +22,9 @@ let sound: THREE.Audio;
 let audioAnalyzer: THREE.AudioAnalyser;
 
 (function start() {
+  // scene init
+  //scene.background = new THREE.Color("white");
+
   // camera manipulation
   camera.position.set(200, 100, 100);
   camera.lookAt(0, 0, 0);
@@ -44,35 +47,43 @@ let audioAnalyzer: THREE.AudioAnalyser;
 
   // adding icosahedron from file ASYNC
   // attribution: Icosahedron 1,0 by Ina Yosun Chang [CC-BY] via Poly Pizza
-  // REWRITE OTHER COMPONENTS TO TAKE CALLBACKS W A PASSTHROUGH VAR FOR THE OBJECT?
   createGLTFObject(
     "icosahedron",
     meshGroup,
     "src/_assets/_models/Icosahedron.glb",
-    () => {
-      meshGroup.getObjectByName("icosahedron")!.children[0].material =
-        new THREE.MeshLambertMaterial({ color: 0xcecece });
-      meshGroup.getObjectByName("icosahedron")!.castShadow = true;
-      meshGroup.getObjectByName("icosahedron")!.receiveShadow = true;
+    (result: THREE.Group) => {
+      result.traverse((element: any) => {
+        if (element.isMesh) {
+          element.material = new THREE.MeshLambertMaterial({
+            color: 0xffffff,
+          });
+          element.castShadow = true;
+          element.receiveShadow = true;
+        }
+      });
     }
   );
 
   // adding plane underneath
-  createPlane("ground", meshGroup);
-  //errors out bc it could not exist, but we know it does, so using ! (non null assertion operator)
-  meshGroup.getObjectByName("ground")!.scale.set(1000, 1000, 1000);
-  meshGroup.getObjectByName("ground")!.rotation.x = -Math.PI * 0.5;
-  meshGroup.getObjectByName("ground")!.position.y = -50;
-  meshGroup.getObjectByName("ground")!.castShadow = true;
-  meshGroup.getObjectByName("ground")!.receiveShadow = true;
+  createPlane("ground", meshGroup, (result: THREE.Mesh) => {
+    result.scale.set(1000, 1000, 1000);
+    result.rotation.x = -Math.PI * 0.5;
+    result.position.y = -50;
+    result.castShadow = true;
+    result.receiveShadow = true;
+  });
 
   // creating lights
-  createSpotlight("l1", 0xffffff, 100, lightGroup);
-  lightGroup.getObjectByName("l1")!.position.set(0, 100, 100);
-  let spotlightHelper: THREE.SpotLightHelper = new THREE.SpotLightHelper(
-    lightGroup.getObjectByName("l1") as THREE.Light
+  createSpotlight(
+    "l1",
+    0xffffff,
+    100,
+    lightGroup,
+    (result: THREE.SpotLight) => {
+      result.position.set(0, 100, 100);
+      result.castShadow = true;
+    }
   );
-  scene.add(spotlightHelper);
 
   // adding parent groups to scene
   scene.add(meshGroup);

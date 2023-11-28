@@ -5,7 +5,7 @@ export function createGLTFObject(
   name: string,
   parentGroup: THREE.Group,
   path: string,
-  callback?: Function
+  callback?: (threeObj: any) => void
 ) {
   const loader = new GLTFLoader();
 
@@ -15,6 +15,6 @@ export function createGLTFObject(
     parentGroup.add(gltf.scene);
 
     // if theres a callback, use it, otherwise dont do anything
-    callback ? callback() : null;
+    callback ? callback(gltfScene) : null;
   });
 }
