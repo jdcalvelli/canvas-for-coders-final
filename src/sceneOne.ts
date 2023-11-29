@@ -14,10 +14,6 @@ const scene: THREE.Scene = new THREE.Scene();
 // parent groups
 const meshGroup: THREE.Group = new THREE.Group();
 const lightGroup: THREE.Group = new THREE.Group();
-const soundGroup: THREE.Group = new THREE.Group();
-
-// audioAnalyzer needs to be global to scene so it can be referenced in update
-let audioAnalyzer: THREE.AudioAnalyser;
 
 (function start() {
   // scene init
@@ -28,20 +24,13 @@ let audioAnalyzer: THREE.AudioAnalyser;
   threeGlobals.camera.lookAt(0, 0, 0);
   threeGlobals.camera.add(audioGlobals.audioListener);
 
-  // three audio - kick this out into some other kind of thing (audio singleton?)
   // should also write a little helper for audio visuals that can just go in the top right (regular old bar chart situation)
   // sounds
   createSound(
     "haywyre",
-    soundGroup,
     "src/__assets/_audio/Haywyre - Let Me Hear That (320 kbps).mp3",
     (result: THREE.Audio) => {
       result.play();
-      console.log(soundGroup.getObjectByName("haywyre"));
-      audioAnalyzer = new THREE.AudioAnalyser(
-        soundGroup.getObjectByName("haywyre")! as THREE.Audio,
-        64
-      );
     }
   );
 
@@ -68,7 +57,6 @@ let audioAnalyzer: THREE.AudioAnalyser;
     result.scale.set(1000, 1000, 1000);
     result.rotation.x = -Math.PI * 0.5;
     result.position.y = -50;
-    result.castShadow = true;
     result.receiveShadow = true;
   });
 
@@ -87,7 +75,6 @@ let audioAnalyzer: THREE.AudioAnalyser;
   // adding parent groups to scene
   scene.add(meshGroup);
   scene.add(lightGroup);
-  scene.add(soundGroup);
 })();
 
 (function update(time) {
@@ -96,24 +83,24 @@ let audioAnalyzer: THREE.AudioAnalyser;
   // math sin does the oscillation back and forth
   // song bpm is 110 (beat duration = 60 / bpm)
   // using sound context time instead of update frame time
-  if (soundGroup.getObjectByName("haywyre")!.isPlaying) {
+  if (audioGlobals.sounds.get("haywyre")!.isPlaying) {
     meshGroup.getObjectByName("icosahedron")!.rotation.y =
       2 *
       Math.sin(
-        (soundGroup.getObjectByName("haywyre")!.context.currentTime * 1000) /
-          545.5
+        (audioGlobals.sounds.get("haywyre")!.context.currentTime * 1000) / 545.5
       );
     meshGroup.getObjectByName("icosahedron")!.rotation.z =
       2 *
       -Math.sin(
-        (soundGroup.getObjectByName("haywyre")!.context.currentTime * 1000) /
-          545.5
+        (audioGlobals.sounds.get("haywyre")!.context.currentTime * 1000) / 545.5
       );
   }
 
   // save freqdata into more accessible array
-  // used before being assigned error to be fixed later?
-  let freqData: Uint8Array = audioAnalyzer.getFrequencyData();
+  // not doing it with arrays is probably better? to be able to reference by key?
+  let freqData: Uint8Array = audioGlobals.soundAnalysers
+    .get("haywyre")!
+    .getFrequencyData();
   // change icosahedron scales based on fft
   meshGroup.getObjectByName("icosahedron")!.scale.x = Math.max(
     3,
