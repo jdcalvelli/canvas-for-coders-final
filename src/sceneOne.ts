@@ -4,77 +4,79 @@ import "./style.css";
 import { audioGlobals } from "./__globals/audioGlobals";
 import { threeGlobals } from "./__globals/threeGlobals";
 // component imports
-import { createSpotlight } from "./_lights/spotlightObj";
-import { createGLTFObject } from "./_meshes/gltfObj";
-import { createPlane } from "./_meshes/planeObj";
-import { createSound } from "./_sounds/soundObj";
+import { createSpotlight } from "./__components/_lights/spotlightObj";
+import { createGLTFObject } from "./__components/_meshes/gltfObj";
+import { createPlane } from "./__components/_meshes/planeObj";
+import { createSound } from "./__components/_sounds/soundObj";
 
-// scene properties
+// SCENE PROPERTIES
+// scene itself
 const scene: THREE.Scene = new THREE.Scene();
-// parent groups
-const meshGroup: THREE.Group = new THREE.Group();
-const lightGroup: THREE.Group = new THREE.Group();
+// the raw tree of objects added to three scene
+const sceneTree: THREE.Group = new THREE.Group();
+// maps for referencing meshes and lights
+const sceneMeshes: Map<string, THREE.Object3D> = new Map<
+  string,
+  THREE.Object3D
+>();
+const sceneLights: Map<string, THREE.Light> = new Map<string, THREE.Light>();
 
 (function start() {
-  // scene init
-  // scene.background = new THREE.Color("white");
-
-  // camera manipulation
+  // CAMERA INIT
   threeGlobals.camera.position.set(200, 100, 100);
   threeGlobals.camera.lookAt(0, 0, 0);
   threeGlobals.camera.add(audioGlobals.audioListener);
 
-  // should also write a little helper for audio visuals that can just go in the top right (regular old bar chart situation)
-  // sounds
+  // SOUNDS INIT
   createSound(
     "haywyre",
     "src/__assets/_audio/Haywyre - Let Me Hear That (320 kbps).mp3",
-    (result: THREE.Audio) => {
+    (result) => {
       result.play();
     }
   );
 
+  // MESH INIT
   // adding icosahedron from file ASYNC
   // attribution: Icosahedron 1,0 by Ina Yosun Chang [CC-BY] via Poly Pizza
   createGLTFObject(
     "icosahedron",
-    meshGroup,
+    sceneMeshes,
     "src/__assets/_models/Icosahedron.glb",
-    (result: THREE.Group) => {
-      result.traverse((element: any) => {
-        if (element.isMesh) {
-          element.material = new THREE.MeshLambertMaterial({
+    (result) => {
+      result.traverse((element: THREE.Object3D) => {
+        if ((element as THREE.Mesh).isMesh) {
+          (element as THREE.Mesh).material = new THREE.MeshLambertMaterial({
             color: 0xffffff,
           });
           element.castShadow = true;
         }
       });
+
+      sceneTree.add(sceneMeshes.get("icosahedron")!);
     }
   );
-
   // adding plane underneath
-  createPlane("ground", meshGroup, (result: THREE.Mesh) => {
+  createPlane("ground", sceneMeshes, (result: THREE.Mesh) => {
     result.scale.set(1000, 1000, 1000);
     result.rotation.x = -Math.PI * 0.5;
     result.position.y = -50;
     result.receiveShadow = true;
+
+    sceneTree.add(sceneMeshes.get("ground")!);
   });
 
-  // creating lights
-  createSpotlight(
-    "l1",
-    0xffffff,
-    100,
-    lightGroup,
-    (result: THREE.SpotLight) => {
-      result.position.set(0, 100, 100);
-      result.castShadow = true;
-    }
-  );
+  // LIGHTS INIT
+  // spotlight
+  createSpotlight("l1", 0xffffff, 100, sceneLights, (result) => {
+    result.position.set(0, 100, 100);
+    result.castShadow = true;
 
-  // adding parent groups to scene
-  scene.add(meshGroup);
-  scene.add(lightGroup);
+    sceneTree.add(sceneLights.get("l1")!);
+  });
+
+  // ADD SCENETREE
+  scene.add(sceneTree);
 })();
 
 (function update(time) {
@@ -84,12 +86,12 @@ const lightGroup: THREE.Group = new THREE.Group();
   // song bpm is 110 (beat duration = 60 / bpm)
   // using sound context time instead of update frame time
   if (audioGlobals.sounds.get("haywyre")!.isPlaying) {
-    meshGroup.getObjectByName("icosahedron")!.rotation.y =
+    sceneMeshes.get("icosahedron")!.rotation.y =
       2 *
       Math.sin(
         (audioGlobals.sounds.get("haywyre")!.context.currentTime * 1000) / 545.5
       );
-    meshGroup.getObjectByName("icosahedron")!.rotation.z =
+    sceneMeshes.get("icosahedron")!.rotation.z =
       2 *
       -Math.sin(
         (audioGlobals.sounds.get("haywyre")!.context.currentTime * 1000) / 545.5
@@ -102,38 +104,39 @@ const lightGroup: THREE.Group = new THREE.Group();
     .get("haywyre")!
     .getFrequencyData();
   // change icosahedron scales based on fft
-  meshGroup.getObjectByName("icosahedron")!.scale.x = Math.max(
+  sceneMeshes.get("icosahedron")!.scale.x = Math.max(
     3,
     (7 * freqData[22]) / 255
   );
-  meshGroup.getObjectByName("icosahedron")!.scale.y = Math.max(
+  sceneMeshes.get("icosahedron")!.scale.y = Math.max(
     3,
     (7 * freqData[22]) / 255
   );
-  meshGroup.getObjectByName("icosahedron")!.scale.z = Math.max(
+  sceneMeshes.get("icosahedron")!.scale.z = Math.max(
     3,
     (7 * freqData[22]) / 255
   );
 
   // change icosahedron color
-  let icoMesh = meshGroup.getObjectByName("icosahedron")!
-    .children[0] as THREE.Mesh;
-  // but this does exist lmao
-  icoMesh.material.color.setRGB(
-    freqData[1] / 255,
-    freqData[11] / 255,
-    freqData[22] / 255
-  );
+  sceneMeshes.get("icosahedron")!.traverse((element: THREE.Object3D) => {
+    if ((element as THREE.Mesh).isMesh) {
+      let elementMat = (element as THREE.Mesh)
+        .material as THREE.MeshLambertMaterial;
+      elementMat.color.setRGB(
+        freqData[1] / 255,
+        freqData[11] / 255,
+        freqData[22] / 255
+      );
+    }
+  });
 
   // change spotlight intensity based on freqData
-  lightGroup.getObjectByName("l1")!.intensity = Math.max(200, freqData[22]);
+  sceneLights.get("l1")!.intensity = Math.max(200, freqData[22]);
   if (freqData[22] >= 125) {
     console.log("OVER");
-    lightGroup
-      .getObjectByName("l1")!
-      .color.setRGB(0.75, 0.2, freqData[22] / 255);
+    sceneLights.get("l1")!.color.setRGB(0.75, 0.2, freqData[22] / 255);
   } else {
-    lightGroup.getObjectByName("l1")!.color.setRGB(1, 1, 1);
+    sceneLights.get("l1")!.color.setRGB(1, 1, 1);
   }
 
   // required render for threejs

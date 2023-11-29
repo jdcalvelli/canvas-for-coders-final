@@ -2,8 +2,8 @@ import * as THREE from "three";
 
 export function createPlane(
   name: string,
-  parentGroup: THREE.Group,
-  callback?: (threeObj: any) => void
+  parentGroup: Map<string, THREE.Object3D>,
+  callback: (threeObj: any) => void
 ) {
   // create geometry
   const planeGeom = new THREE.PlaneGeometry(1, 1, 1);
@@ -18,8 +18,8 @@ export function createPlane(
   planeMesh.name = name;
 
   // append to parentGroup
-  parentGroup.add(planeMesh);
+  parentGroup.set(name, planeMesh);
 
-  // if theres a callback, use it, otherwise dont do anything
-  callback ? callback(planeMesh) : null;
+  // run callback
+  callback(planeMesh);
 }

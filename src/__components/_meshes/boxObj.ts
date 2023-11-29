@@ -2,8 +2,8 @@ import * as THREE from "three";
 
 export function createBox(
   name: string,
-  parentGroup: THREE.Group,
-  callback?: (threeObj: any) => void
+  parentGroup: Map<string, THREE.Object3D>,
+  callback: (threeObj: any) => void
 ) {
   // create geometry
   const boxGeom = new THREE.BoxGeometry(1, 1, 1);
@@ -15,8 +15,8 @@ export function createBox(
   boxMesh.name = name;
 
   // append to parentGroup
-  parentGroup.add(boxMesh);
+  parentGroup.set(name, boxMesh);
 
-  // if theres a callback, use it, otherwise dont do anything
-  callback ? callback(boxMesh) : null;
+  // run callback
+  callback(boxMesh);
 }

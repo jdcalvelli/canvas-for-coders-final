@@ -4,8 +4,8 @@ export function createSpotlight(
   name: string,
   color: number,
   intensity: number,
-  parentGroup: THREE.Group,
-  callback?: (threeObj: any) => void
+  parentGroup: Map<string, THREE.Light>,
+  callback: (threeObj: any) => void
 ) {
   // create spotlight with sensible defaults
   const spotLight = new THREE.SpotLight(color, intensity);
@@ -18,9 +18,8 @@ export function createSpotlight(
   spotLight.name = name;
 
   // add to parentGroup
-  parentGroup.add(spotLight);
+  parentGroup.set(name, spotLight);
 
-  // if theres a callback, use it, otherwise dont do anything
-  // theres probably a better way to do this so that it's typed
-  callback ? callback(spotLight) : null;
+  // run callback
+  callback(spotLight);
 }
