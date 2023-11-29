@@ -1,13 +1,9 @@
 import * as THREE from "three";
 import "./style.css";
 // global imports
+import { Components } from "./__components/components";
 import { audioGlobals } from "./__globals/audioGlobals";
 import { threeGlobals } from "./__globals/threeGlobals";
-// component imports
-import { createSpotlight } from "./__components/_lights/spotlightObj";
-import { createGLTFObject } from "./__components/_meshes/gltfObj";
-import { createPlane } from "./__components/_meshes/planeObj";
-import { createSound } from "./__components/_sounds/soundObj";
 
 // SCENE PROPERTIES
 const scene: THREE.Scene = new THREE.Scene();
@@ -26,7 +22,7 @@ const sceneLights: Map<string, THREE.Light> = new Map<string, THREE.Light>();
   threeGlobals.camera.add(audioGlobals.audioListener);
 
   // SOUNDS INIT
-  createSound(
+  Components.sounds.createSound(
     "haywyre",
     "src/__assets/_audio/Haywyre - Let Me Hear That (320 kbps).mp3",
     (result) => {
@@ -36,7 +32,7 @@ const sceneLights: Map<string, THREE.Light> = new Map<string, THREE.Light>();
 
   // MESH INIT
   // attribution: Icosahedron 1,0 by Ina Yosun Chang [CC-BY] via Poly Pizza
-  createGLTFObject(
+  Components.meshes.createGLTFObject(
     "icosahedron",
     sceneMeshes,
     "src/__assets/_models/Icosahedron.glb",
@@ -45,6 +41,8 @@ const sceneLights: Map<string, THREE.Light> = new Map<string, THREE.Light>();
         if ((element as THREE.Mesh).isMesh) {
           (element as THREE.Mesh).material = new THREE.MeshLambertMaterial({
             color: 0xffffff,
+            alphaHash: true,
+            opacity: 0.4,
           });
           element.castShadow = true;
         }
@@ -53,7 +51,7 @@ const sceneLights: Map<string, THREE.Light> = new Map<string, THREE.Light>();
       sceneTree.add(sceneMeshes.get("icosahedron")!);
     }
   );
-  createPlane("ground", sceneMeshes, (result: THREE.Mesh) => {
+  Components.meshes.createPlane("ground", sceneMeshes, (result: THREE.Mesh) => {
     result.scale.set(1000, 1000, 1000);
     result.rotation.x = -Math.PI * 0.5;
     result.position.y = -50;
@@ -63,12 +61,18 @@ const sceneLights: Map<string, THREE.Light> = new Map<string, THREE.Light>();
   });
 
   // LIGHTS INIT
-  createSpotlight("l1", 0xffffff, 100, sceneLights, (result) => {
-    result.position.set(0, 100, 100);
-    result.castShadow = true;
+  Components.lights.createSpotlight(
+    "l1",
+    0xffffff,
+    100,
+    sceneLights,
+    (result) => {
+      result.position.set(0, 100, 100);
+      result.castShadow = true;
 
-    sceneTree.add(sceneLights.get("l1")!);
-  });
+      sceneTree.add(sceneLights.get("l1")!);
+    }
+  );
 
   // SCENETREE INIT
   scene.add(sceneTree);

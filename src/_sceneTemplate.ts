@@ -1,11 +1,8 @@
 import * as THREE from "three";
 import "./style.css";
 // global imports
+import { Components } from "./__components/components";
 import { threeGlobals } from "./__globals/threeGlobals";
-// component imports
-import { createSpotlight } from "./__components/_lights/spotlightObj";
-import { createBox } from "./__components/_meshes/boxObj";
-import { createPlane } from "./__components/_meshes/planeObj";
 
 // SCENE PROPERTIES
 // scene itself
@@ -29,7 +26,7 @@ const sceneLights: Map<string, THREE.Light> = new Map<string, THREE.Light>();
 
   // MESH INIT
   // adding plane underneath
-  createPlane("ground", sceneMeshes, (result: THREE.Mesh) => {
+  Components.meshes.createPlane("ground", sceneMeshes, (result) => {
     result.scale.set(1000, 1000, 1000);
     result.rotation.x = -Math.PI * 0.5;
     result.position.y = -50;
@@ -38,7 +35,7 @@ const sceneLights: Map<string, THREE.Light> = new Map<string, THREE.Light>();
     sceneTree.add(sceneMeshes.get("ground")!);
   });
 
-  createBox("box", sceneMeshes, (result: THREE.Mesh) => {
+  Components.meshes.createBox("box", sceneMeshes, (result) => {
     result.scale.set(40, 40, 40);
     result.castShadow = true;
 
@@ -47,12 +44,18 @@ const sceneLights: Map<string, THREE.Light> = new Map<string, THREE.Light>();
 
   // LIGHTS INIT
   // spotlight
-  createSpotlight("l1", 0xffffff, 100, sceneLights, (result) => {
-    result.position.set(0, 100, 100);
-    result.castShadow = true;
+  Components.lights.createSpotlight(
+    "l1",
+    0xffffff,
+    100,
+    sceneLights,
+    (result) => {
+      result.position.set(0, 100, 100);
+      result.castShadow = true;
 
-    sceneTree.add(sceneLights.get("l1")!);
-  });
+      sceneTree.add(sceneLights.get("l1")!);
+    }
+  );
 
   // SCENETREE INIT
   scene.add(sceneTree);

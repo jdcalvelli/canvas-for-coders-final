@@ -15,7 +15,7 @@ function createRenderer(): THREE.WebGLRenderer {
 
   // enable shadows
   renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.shadowMap.type = THREE.BasicShadowMap;
 
   // init renderer
   renderer.setPixelRatio(window.devicePixelRatio);
