@@ -1,52 +1,56 @@
 import * as THREE from "three";
 import "./style.css";
 // global imports
-import { threeGlobals } from "./_globals/threeGlobals";
+import { audioGlobals } from "./__globals/audioGlobals";
+import { threeGlobals } from "./__globals/threeGlobals";
 // component imports
-import { createSpotlight } from "./_lights/spotlight";
-import { createGLTFObject } from "./_meshes/gltfObject";
-import { createPlane } from "./_meshes/plane";
+import { createSpotlight } from "./_lights/spotlightObj";
+import { createGLTFObject } from "./_meshes/gltfObj";
+import { createPlane } from "./_meshes/planeObj";
+import { createSound } from "./_sounds/soundObj";
 
 // scene properties
 const scene: THREE.Scene = new THREE.Scene();
 // parent groups
 const meshGroup: THREE.Group = new THREE.Group();
 const lightGroup: THREE.Group = new THREE.Group();
+const soundGroup: THREE.Group = new THREE.Group();
 
 // audioAnalyzer needs to be global to scene so it can be referenced in update
-let sound: THREE.Audio;
 let audioAnalyzer: THREE.AudioAnalyser;
 
 (function start() {
   // scene init
-  //scene.background = new THREE.Color("white");
+  // scene.background = new THREE.Color("white");
 
   // camera manipulation
   threeGlobals.camera.position.set(200, 100, 100);
   threeGlobals.camera.lookAt(0, 0, 0);
+  threeGlobals.camera.add(audioGlobals.audioListener);
 
   // three audio - kick this out into some other kind of thing (audio singleton?)
   // should also write a little helper for audio visuals that can just go in the top right (regular old bar chart situation)
-  const listener: THREE.AudioListener = new THREE.AudioListener();
-  threeGlobals.camera.add(listener);
-  sound = new THREE.Audio(listener);
-  const audioLoader: THREE.AudioLoader = new THREE.AudioLoader();
-  audioLoader.load(
-    "src/_assets/_audio/Haywyre - Let Me Hear That (320 kbps).mp3",
-    function (buffer: AudioBuffer) {
-      sound.setBuffer(buffer);
-      sound.setVolume(0.5);
-      sound.play();
+  // sounds
+  createSound(
+    "haywyre",
+    soundGroup,
+    "src/__assets/_audio/Haywyre - Let Me Hear That (320 kbps).mp3",
+    (result: THREE.Audio) => {
+      result.play();
+      console.log(soundGroup.getObjectByName("haywyre"));
+      audioAnalyzer = new THREE.AudioAnalyser(
+        soundGroup.getObjectByName("haywyre")! as THREE.Audio,
+        64
+      );
     }
   );
-  audioAnalyzer = new THREE.AudioAnalyser(sound, 64);
 
   // adding icosahedron from file ASYNC
   // attribution: Icosahedron 1,0 by Ina Yosun Chang [CC-BY] via Poly Pizza
   createGLTFObject(
     "icosahedron",
     meshGroup,
-    "src/_assets/_models/Icosahedron.glb",
+    "src/__assets/_models/Icosahedron.glb",
     (result: THREE.Group) => {
       result.traverse((element: any) => {
         if (element.isMesh) {
@@ -54,7 +58,6 @@ let audioAnalyzer: THREE.AudioAnalyser;
             color: 0xffffff,
           });
           element.castShadow = true;
-          element.receiveShadow = true;
         }
       });
     }
@@ -84,6 +87,7 @@ let audioAnalyzer: THREE.AudioAnalyser;
   // adding parent groups to scene
   scene.add(meshGroup);
   scene.add(lightGroup);
+  scene.add(soundGroup);
 })();
 
 (function update(time) {
@@ -92,14 +96,23 @@ let audioAnalyzer: THREE.AudioAnalyser;
   // math sin does the oscillation back and forth
   // song bpm is 110 (beat duration = 60 / bpm)
   // using sound context time instead of update frame time
-  if (sound.isPlaying) {
+  if (soundGroup.getObjectByName("haywyre")!.isPlaying) {
     meshGroup.getObjectByName("icosahedron")!.rotation.y =
-      2 * Math.sin((sound.context.currentTime * 1000) / 545.5);
+      2 *
+      Math.sin(
+        (soundGroup.getObjectByName("haywyre")!.context.currentTime * 1000) /
+          545.5
+      );
     meshGroup.getObjectByName("icosahedron")!.rotation.z =
-      2 * -Math.sin((sound.context.currentTime * 1000) / 545.5);
+      2 *
+      -Math.sin(
+        (soundGroup.getObjectByName("haywyre")!.context.currentTime * 1000) /
+          545.5
+      );
   }
 
   // save freqdata into more accessible array
+  // used before being assigned error to be fixed later?
   let freqData: Uint8Array = audioAnalyzer.getFrequencyData();
   // change icosahedron scales based on fft
   meshGroup.getObjectByName("icosahedron")!.scale.x = Math.max(
