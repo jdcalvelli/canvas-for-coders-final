@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { audioGlobals } from "../__globals/audioGlobals";
+import { audioGlobals } from "../../__globals/audioGlobals";
 
 export function createSound(
   name: string,
