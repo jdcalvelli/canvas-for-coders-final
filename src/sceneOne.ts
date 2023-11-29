@@ -1,22 +1,18 @@
 import * as THREE from "three";
 import "./style.css";
 // global imports
-import { createCamera } from "./_globals/camera";
-import { createRenderer } from "./_globals/renderer";
+import { threeGlobals } from "./_globals/threeGlobals";
 // component imports
 import { createSpotlight } from "./_lights/spotlight";
 import { createGLTFObject } from "./_meshes/gltfObject";
 import { createPlane } from "./_meshes/plane";
 
-// properties globals
-const renderer: THREE.WebGLRenderer = createRenderer();
-const camera: THREE.PerspectiveCamera = createCamera();
-
-// scene locals
+// scene properties
 const scene: THREE.Scene = new THREE.Scene();
-// parent groups for referencing in update
+// parent groups
 const meshGroup: THREE.Group = new THREE.Group();
 const lightGroup: THREE.Group = new THREE.Group();
+
 // audioAnalyzer needs to be global to scene so it can be referenced in update
 let sound: THREE.Audio;
 let audioAnalyzer: THREE.AudioAnalyser;
@@ -26,13 +22,13 @@ let audioAnalyzer: THREE.AudioAnalyser;
   //scene.background = new THREE.Color("white");
 
   // camera manipulation
-  camera.position.set(200, 100, 100);
-  camera.lookAt(0, 0, 0);
+  threeGlobals.camera.position.set(200, 100, 100);
+  threeGlobals.camera.lookAt(0, 0, 0);
 
   // three audio - kick this out into some other kind of thing (audio singleton?)
   // should also write a little helper for audio visuals that can just go in the top right (regular old bar chart situation)
   const listener: THREE.AudioListener = new THREE.AudioListener();
-  camera.add(listener);
+  threeGlobals.camera.add(listener);
   sound = new THREE.Audio(listener);
   const audioLoader: THREE.AudioLoader = new THREE.AudioLoader();
   audioLoader.load(
@@ -141,5 +137,5 @@ let audioAnalyzer: THREE.AudioAnalyser;
   }
 
   // required render for threejs
-  renderer.render(scene, camera);
+  threeGlobals.renderer.render(scene, threeGlobals.camera);
 })();
