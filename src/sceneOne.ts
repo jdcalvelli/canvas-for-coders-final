@@ -10,17 +10,15 @@ import { createPlane } from "./__components/_meshes/planeObj";
 import { createSound } from "./__components/_sounds/soundObj";
 
 // SCENE PROPERTIES
-// scene itself
 const scene: THREE.Scene = new THREE.Scene();
-// the raw tree of objects added to three scene
 const sceneTree: THREE.Group = new THREE.Group();
-// maps for referencing meshes and lights
 const sceneMeshes: Map<string, THREE.Object3D> = new Map<
   string,
   THREE.Object3D
 >();
 const sceneLights: Map<string, THREE.Light> = new Map<string, THREE.Light>();
 
+// START FUNCTION
 (function start() {
   // CAMERA INIT
   threeGlobals.camera.position.set(200, 100, 100);
@@ -37,7 +35,6 @@ const sceneLights: Map<string, THREE.Light> = new Map<string, THREE.Light>();
   );
 
   // MESH INIT
-  // adding icosahedron from file ASYNC
   // attribution: Icosahedron 1,0 by Ina Yosun Chang [CC-BY] via Poly Pizza
   createGLTFObject(
     "icosahedron",
@@ -56,7 +53,6 @@ const sceneLights: Map<string, THREE.Light> = new Map<string, THREE.Light>();
       sceneTree.add(sceneMeshes.get("icosahedron")!);
     }
   );
-  // adding plane underneath
   createPlane("ground", sceneMeshes, (result: THREE.Mesh) => {
     result.scale.set(1000, 1000, 1000);
     result.rotation.x = -Math.PI * 0.5;
@@ -67,7 +63,6 @@ const sceneLights: Map<string, THREE.Light> = new Map<string, THREE.Light>();
   });
 
   // LIGHTS INIT
-  // spotlight
   createSpotlight("l1", 0xffffff, 100, sceneLights, (result) => {
     result.position.set(0, 100, 100);
     result.castShadow = true;
@@ -75,7 +70,7 @@ const sceneLights: Map<string, THREE.Light> = new Map<string, THREE.Light>();
     sceneTree.add(sceneLights.get("l1")!);
   });
 
-  // ADD SCENETREE
+  // SCENETREE INIT
   scene.add(sceneTree);
 })();
 
