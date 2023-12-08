@@ -5,6 +5,13 @@ import { Components } from "./__components/components";
 import { audioGlobals } from "./__globals/audioGlobals";
 import { threeGlobals } from "./__globals/threeGlobals";
 
+// should be pushed into engine layer perhaps
+import { EffectComposer } from "three/examples/jsm/Addons.js";
+import { RenderPass } from "three/examples/jsm/Addons.js";
+import { ShaderPass } from "three/examples/jsm/Addons.js";
+import { getDistortionShaderDefinition } from "./__shaders/lensDistortionShader";
+import { degToRad } from "three/src/math/MathUtils.js";
+
 // SCENE PROPERTIES
 const scene: THREE.Scene = new THREE.Scene();
 const sceneTree: THREE.Group = new THREE.Group();
@@ -14,10 +21,32 @@ const sceneMeshes: Map<string, THREE.Object3D> = new Map<
 >();
 const sceneLights: Map<string, THREE.Light> = new Map<string, THREE.Light>();
 
+// should be pushed into engine layer perhaps
+const effectComposer: EffectComposer = new EffectComposer(
+  threeGlobals.renderer
+);
+
 // START FUNCTION
 (function start() {
+  // effect render pipeline test
+  // clear render
+  effectComposer.addPass(new RenderPass(scene, threeGlobals.camera));
+  // test distortion shader
+  let lensDistortionShader: ShaderPass = new ShaderPass(
+    getDistortionShaderDefinition()
+  );
+  lensDistortionShader.uniforms["strength"].value = 1;
+  lensDistortionShader.uniforms["height"].value = Math.tan(
+    degToRad(threeGlobals.camera.fov / 2)
+  );
+  lensDistortionShader.uniforms["aspectRatio"].value =
+    threeGlobals.camera.aspect;
+  lensDistortionShader.uniforms["cylindricalRatio"].value = 2;
+
+  effectComposer.addPass(lensDistortionShader);
+
   // CAMERA INIT
-  threeGlobals.camera.position.set(200, 100, 100);
+  threeGlobals.camera.position.set(80, 50, 50);
   threeGlobals.camera.lookAt(0, 0, 0);
   threeGlobals.camera.add(audioGlobals.audioListener);
 
@@ -51,14 +80,31 @@ const sceneLights: Map<string, THREE.Light> = new Map<string, THREE.Light>();
       sceneTree.add(sceneMeshes.get("icosahedron")!);
     }
   );
+
   Components.meshes.createPlane("ground", sceneMeshes, (result: THREE.Mesh) => {
     result.scale.set(1000, 1000, 1000);
     result.rotation.x = -Math.PI * 0.5;
     result.position.y = -50;
-    result.receiveShadow = true;
+    //result.receiveShadow = true;
 
     sceneTree.add(sceneMeshes.get("ground")!);
   });
+
+  // create a plane specifically for shadow reception
+  Components.meshes.createPlane(
+    "ground_shadow",
+    sceneMeshes,
+    (result: THREE.Mesh) => {
+      // change the material
+      result.material = new THREE.ShadowMaterial({ opacity: 0.2 });
+      result.scale.set(1000, 1000, 1000);
+      result.rotation.x = -Math.PI * 0.5;
+      result.position.y = -50;
+      result.receiveShadow = true;
+
+      sceneTree.add(sceneMeshes.get("ground_shadow")!);
+    }
+  );
 
   // LIGHTS INIT
   Components.lights.createSpotlight(
@@ -139,5 +185,7 @@ const sceneLights: Map<string, THREE.Light> = new Map<string, THREE.Light>();
   }
 
   // required render for threejs
-  threeGlobals.renderer.render(scene, threeGlobals.camera);
+  //threeGlobals.renderer.render(scene, threeGlobals.camera);
+  // because we're using effect composer, need to use this render instead of traditional
+  effectComposer.render();
 })();

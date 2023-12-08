@@ -29,7 +29,7 @@ function createRenderer(): THREE.WebGLRenderer {
 function createCamera(): THREE.PerspectiveCamera {
   // create camera
   const camera = new THREE.PerspectiveCamera(
-    75,
+    140,
     window.innerWidth / window.innerHeight,
     1,
     1000
