@@ -9,6 +9,7 @@ import { threeGlobals } from "./__globals/threeGlobals";
 import { EffectComposer } from "three/examples/jsm/Addons.js";
 import { RenderPass } from "three/examples/jsm/Addons.js";
 import { ShaderPass } from "three/examples/jsm/Addons.js";
+import { FilmPass } from "three/examples/jsm/Addons.js";
 import { getDistortionShaderDefinition } from "./__shaders/lensDistortionShader";
 import { degToRad } from "three/src/math/MathUtils.js";
 
@@ -44,6 +45,8 @@ const effectComposer: EffectComposer = new EffectComposer(
   lensDistortionShader.uniforms["cylindricalRatio"].value = 2;
 
   effectComposer.addPass(lensDistortionShader);
+
+  effectComposer.addPass(new FilmPass(2));
 
   // CAMERA INIT
   threeGlobals.camera.position.set(80, 50, 50);
