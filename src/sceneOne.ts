@@ -54,7 +54,8 @@ const effectComposer: EffectComposer = new EffectComposer(
   Components.sounds.createSound(
     "haywyre",
     "src/__assets/_audio/Haywyre - Let Me Hear That (320 kbps).mp3",
-    (result) => {
+    (result: THREE.Audio) => {
+      result.loop = true;
       result.play();
     }
   );

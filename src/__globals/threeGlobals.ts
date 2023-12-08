@@ -19,8 +19,9 @@ function createRenderer(): THREE.WebGLRenderer {
 
   // init renderer
   renderer.setPixelRatio(window.devicePixelRatio);
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  document.querySelector("#app")?.appendChild(renderer.domElement);
+  //renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setSize(640, 480);
+  document.querySelector("#three")?.appendChild(renderer.domElement);
 
   // return renderer
   return renderer;
@@ -28,12 +29,7 @@ function createRenderer(): THREE.WebGLRenderer {
 
 function createCamera(): THREE.PerspectiveCamera {
   // create camera
-  const camera = new THREE.PerspectiveCamera(
-    140,
-    window.innerWidth / window.innerHeight,
-    1,
-    1000
-  );
+  const camera = new THREE.PerspectiveCamera(140, 640 / 480, 1, 1000);
   // return camera
   return camera;
 }
