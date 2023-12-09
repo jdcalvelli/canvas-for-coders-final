@@ -63,6 +63,7 @@ const sceneLights: Map<string, THREE.Light> = new Map<string, THREE.Light>();
 
 // UPDATE FUNCTION
 (function update(time) {
+  //@ts-ignore
   requestAnimationFrame(update);
 
   // spin cube example

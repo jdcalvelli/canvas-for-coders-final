@@ -27,8 +27,11 @@ const effectComposer: EffectComposer = new EffectComposer(
   threeGlobals.renderer
 );
 
+// run after click so as to get around webcontextapi interaction problem
+window.addEventListener("click", start);
+
 // START FUNCTION
-(function start() {
+function start() {
   // effect render pipeline test
   // clear render
   effectComposer.addPass(new RenderPass(scene, threeGlobals.camera));
@@ -53,10 +56,11 @@ const effectComposer: EffectComposer = new EffectComposer(
   threeGlobals.camera.lookAt(0, 0, 0);
   threeGlobals.camera.add(audioGlobals.audioListener);
 
-  // SOUNDS INIT
+  // SOUND INIT
+  // THIS IS A PROBLEM BC OF WEB CONTEXT API
   Components.sounds.createSound(
     "haywyre",
-    "src/__assets/_audio/Haywyre - Let Me Hear That (320 kbps).mp3",
+    "__assets/_audio/letmehearthat.mp3",
     (result: THREE.Audio) => {
       result.loop = true;
       result.play();
@@ -68,7 +72,7 @@ const effectComposer: EffectComposer = new EffectComposer(
   Components.meshes.createGLTFObject(
     "icosahedron",
     sceneMeshes,
-    "src/__assets/_models/Icosahedron.glb",
+    "__assets/_models/Icosahedron.glb",
     (result) => {
       result.traverse((element: THREE.Object3D) => {
         if ((element as THREE.Mesh).isMesh) {
@@ -126,9 +130,11 @@ const effectComposer: EffectComposer = new EffectComposer(
 
   // SCENETREE INIT
   scene.add(sceneTree);
-})();
+}
 
-(function update(time) {
+(function update(_time) {
+  // this is a bad idea generally, but until i can figure out the problem it will have to do
+  //@ts-ignore
   requestAnimationFrame(update);
 
   // math sin does the oscillation back and forth
